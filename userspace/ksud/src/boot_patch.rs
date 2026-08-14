@@ -369,6 +369,50 @@ fn parse_kmi_from_kernel(kernel: &Path) -> Result<String> {
     parse_kmi(&data)
 }
 
+fn find_kptools() -> Result<std::path::PathBuf> {
+    if let Some(path) = std::env::var_os("KPTOOLS") {
+        let p = std::path::PathBuf::from(path);
+        if p.is_file() {
+            return Ok(p);
+        }
+    }
+    if let Some(paths) = std::env::var_os("PATH")
+        && let Some(p) = std::env::split_paths(&paths)
+            .map(|dir| dir.join("kptools"))
+            .find(|p| p.is_file())
+    {
+        return Ok(p);
+    }
+    let local = std::path::Path::new("kptools");
+    if local.is_file() {
+        return Ok(local.to_path_buf());
+    }
+    bail!("kptools not found, set KPTOOLS or add it to PATH")
+}
+
+fn run_kptools(kptools: &std::path::Path, args: &[&str]) -> Result<()> {
+    use std::process::Command;
+    let output = Command::new(kptools)
+        .args(args)
+        .output()
+        .with_context(|| format!("failed to run {}", kptools.display()))?;
+    if !output.status.success() {
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        bail!(
+            "kptools failed with {}: {}{}",
+            output.status,
+            stdout.trim(),
+            if stderr.trim().is_empty() {
+                ""
+            } else {
+                &stderr
+            }
+        );
+    }
+    Ok(())
+}
+
 fn parse_kmi_from_boot(image: &Path) -> Result<String> {
     let data = map_file(image)?;
     let boot = BootImage::parse(&data)?;
@@ -512,6 +556,10 @@ pub struct BootPatchArgs {
     /// Patching ramdisk instead of boot image. This is used for AVD ramdisk
     #[arg(long, default_value = "false")]
     ramdisk: bool,
+
+    /// Inject KPatch-Next kpimg into the kernel image
+    #[arg(long, default_value = None)]
+    kpimg: Option<PathBuf>,
 }
 
 pub fn patch(args: BootPatchArgs) -> Result<()> {
@@ -541,6 +589,7 @@ pub fn patch(args: BootPatchArgs) -> Result<()> {
             #[cfg(not(target_os = "android"))]
             arch,
             ramdisk,
+            kpimg,
         } = args;
 
         println!(include_str!("banner"));
@@ -796,6 +845,37 @@ pub fn patch(args: BootPatchArgs) -> Result<()> {
             patcher.replace_vendor_ramdisk(idx, Box::new(Cursor::new(new_cpio)), false);
         } else {
             patcher.replace_ramdisk(Box::new(Cursor::new(new_cpio)), false);
+        }
+
+        if let Some(kpimg_path) = &kpimg {
+            println!("- Injecting KPatch-Next kpimg");
+            let kptools = find_kptools()?;
+            let kernel_image = boot_image
+                .get_blocks()
+                .get_kernel()
+                .context("no kernel found in boot image")?;
+            let mut kernel_buf = Vec::<u8>::new();
+            kernel_image.dump(&mut kernel_buf, false)?;
+            let tmp_dir = tempfile::tempdir().context("failed to create temp dir")?;
+            let kernel_path = tmp_dir.path().join("kernel");
+            let patched_path = tmp_dir.path().join("kernel.patched");
+            std::fs::write(&kernel_path, &kernel_buf).context("failed to write kernel")?;
+            run_kptools(
+                &kptools,
+                &[
+                    "-p",
+                    "-i",
+                    &kernel_path.display().to_string(),
+                    "-k",
+                    &kpimg_path.display().to_string(),
+                    "-o",
+                    &patched_path.display().to_string(),
+                ],
+            )?;
+            let patched_kernel =
+                std::fs::read(&patched_path).context("failed to read patched kernel")?;
+            println!("- KPM kernel image size: {}", patched_kernel.len());
+            patcher.replace_kernel(Box::new(Cursor::new(patched_kernel)), false);
         }
 
         println!("- Repacking boot image");

@@ -1,0 +1,73 @@
+name: Build KPM
+
+on:
+  push:
+    branches: [ "main", "dev", "ci" ]
+    paths:
+      - '.github/workflows/build-kpm.yml'
+      - 'kpm/**'
+  pull_request:
+    branches: [ "main", "dev" ]
+    paths:
+      - '.github/workflows/build-kpm.yml'
+      - 'kpm/**'
+  workflow_dispatch:
+
+jobs:
+  build-kpm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install AArch64 bare-metal toolchain
+        run: |
+          curl -o arm-gnu.tar.xz https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu/12.2.rel1/binrel/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf.tar.xz
+          tar -Jxf arm-gnu.tar.xz
+          echo "$(pwd)/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf/bin" >> $GITHUB_PATH
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'ndk;27.0.12077973'
+
+      - name: Build KPatch-Next components
+        run: |
+          export KP_TOOLCHAIN="$(pwd)/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf"
+          export ANDROID_NDK="$ANDROID_SDK_ROOT/ndk/27.0.12077973"
+          cd kpm
+          ./build.sh
+
+      - name: Build demo KPMs
+        run: |
+          export TARGET_COMPILE="$(pwd)/arm-gnu-toolchain-12.2.rel1-x86_64-aarch64-none-elf/bin/aarch64-none-elf-"
+          cd kpm/kpms
+          for d in demo-hello demo-inlinehook demo-syscallhook; do
+            ( cd "$d" && make clean && make )
+          done
+
+      - name: Upload kpimg
+        uses: actions/upload-artifact@v4
+        with:
+          name: kpimg
+          path: kpm/kernel/kpimg
+
+      - name: Upload kpatch
+        uses: actions/upload-artifact@v4
+        with:
+          name: kpatch
+          path: kpm/user/build/android/kpatch
+
+      - name: Upload kptools
+        uses: actions/upload-artifact@v4
+        with:
+          name: kptools
+          path: kpm/tools/build/android/kptools
+
+      - name: Upload demo KPMs
+        uses: actions/upload-artifact@v4
+        with:
+          name: demo-kpms
+          path: kpm/kpms/*/*.kpm

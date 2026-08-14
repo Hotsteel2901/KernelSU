@@ -75,6 +75,7 @@ import me.weishu.kernelsu.ui.screen.module.ModulePager
 import me.weishu.kernelsu.ui.screen.modulerepo.ModuleRepoDetailScreen
 import me.weishu.kernelsu.ui.screen.modulerepo.ModuleRepoScreen
 import me.weishu.kernelsu.ui.screen.settings.SettingPager
+import me.weishu.kernelsu.ui.screen.kpm.KpmScreen
 import me.weishu.kernelsu.ui.screen.sulog.SulogScreen
 import me.weishu.kernelsu.ui.screen.superuser.SuperUserPager
 import me.weishu.kernelsu.ui.screen.template.AppProfileTemplateScreen
@@ -182,6 +183,7 @@ class MainActivity : ComponentActivity() {
                             entryProvider = entryProvider {
                                 entry<Route.Main> { mainScreenEntry() }
                                 entry<Route.About> { AboutScreen() }
+                                entry<Route.Kpm> { KpmScreen() }
                                 entry<Route.Sulog> { SulogScreen() }
                                 entry<Route.ColorPalette> { ColorPaletteScreen() }
                                 entry<Route.AppProfileTemplate> { AppProfileTemplateScreen() }

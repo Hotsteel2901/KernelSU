@@ -506,3 +506,38 @@ fun restartApp(packageName: String, userId: Int? = null) {
     forceStopApp(packageName, userId)
     launchApp(packageName, userId)
 }
+
+fun isKpmAvailable(): Boolean {
+    val shell = getRootShell()
+    return shell.newJob().add("${getKsuDaemonPath()} kpm list").to(ArrayList(), null).exec().isSuccess
+}
+
+fun kpmNum(): Int {
+    val shell = getRootShell()
+    val out = shell.newJob().add("${getKsuDaemonPath()} kpm num").to(ArrayList(), null).exec().out
+    return out.firstOrNull()?.trim()?.toIntOrNull() ?: 0
+}
+
+fun kpmList(): String {
+    val shell = getRootShell()
+    val out = shell.newJob().add("${getKsuDaemonPath()} kpm list").to(ArrayList(), null).exec().out
+    return out.joinToString("\n")
+}
+
+fun kpmInfo(name: String): String {
+    val shell = getRootShell()
+    val out = shell.newJob().add("${getKsuDaemonPath()} kpm info '$name'").to(ArrayList(), null).exec().out
+    return out.joinToString("\n")
+}
+
+fun loadKpm(path: String): Boolean {
+    val result = execKsud("kpm load '$path'", true)
+    Log.i(TAG, "kpm load $path result: $result")
+    return result
+}
+
+fun unloadKpm(name: String): Boolean {
+    val result = execKsud("kpm unload '$name'", true)
+    Log.i(TAG, "kpm unload $name result: $result")
+    return result
+}

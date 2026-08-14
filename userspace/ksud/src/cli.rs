@@ -153,6 +153,45 @@ enum Commands {
         #[command(subcommand)]
         command: Initrc,
     },
+
+    /// Manage KPatch-Next Modules (KPM)
+    Kpm {
+        #[command(subcommand)]
+        command: Kpm,
+    },
+}
+
+#[derive(clap::Subcommand, Debug)]
+enum Kpm {
+    /// Load a KPatch-Next Module from a KPM ELF file
+    Load {
+        /// KPM file path
+        path: PathBuf,
+        /// Arguments passed to the KPM
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true, num_args = 0..)]
+        args: Vec<String>,
+    },
+    /// Unload a KPatch-Next Module by name
+    Unload {
+        /// KPM name
+        name: String,
+    },
+    /// Control a KPatch-Next Module by name
+    Ctl0 {
+        /// KPM name
+        name: String,
+        /// Control arguments
+        ctl_args: String,
+    },
+    /// Get the number of loaded KPatch-Next Modules
+    Num,
+    /// List loaded KPatch-Next Modules
+    List,
+    /// Get detailed information about a KPatch-Next Module
+    Info {
+        /// KPM name
+        name: String,
+    },
 }
 
 #[derive(clap::Subcommand, Debug)]
@@ -804,6 +843,36 @@ pub fn run() -> Result<()> {
         },
         Commands::Initrc { command } => match command {
             Initrc::Refresh => regenerate_preinit_rc(),
+        },
+        Commands::Kpm { command } => match command {
+            Kpm::Load { path, args } => {
+                let joined_args = args.join(" ");
+                crate::kpm::load(
+                    &path.to_string_lossy(),
+                    if joined_args.is_empty() {
+                        None
+                    } else {
+                        Some(&joined_args)
+                    },
+                )
+            }
+            Kpm::Unload { name } => crate::kpm::unload(&name),
+            Kpm::Ctl0 { name, ctl_args } => crate::kpm::control(&name, &ctl_args).map(|out| {
+                if !out.is_empty() {
+                    println!("{out}");
+                }
+            }),
+            Kpm::Num => crate::kpm::nums().map(|n| println!("{n}")),
+            Kpm::List => crate::kpm::list().map(|out| {
+                if !out.is_empty() {
+                    println!("{out}");
+                }
+            }),
+            Kpm::Info { name } => crate::kpm::info(&name).map(|out| {
+                if !out.is_empty() {
+                    println!("{out}");
+                }
+            }),
         },
     };
 

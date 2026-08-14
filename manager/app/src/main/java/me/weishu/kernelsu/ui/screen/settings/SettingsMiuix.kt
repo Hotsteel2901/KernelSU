@@ -22,6 +22,7 @@ import androidx.compose.material.icons.rounded.Dashboard
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.DeveloperMode
 import androidx.compose.material.icons.rounded.ElectricalServices
+import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Fence
 import androidx.compose.material.icons.rounded.FolderDelete
 import androidx.compose.material.icons.rounded.Palette
@@ -196,6 +197,29 @@ fun SettingPagerMiuix(
                                     )
                                 },
                                 onClick = actions.onOpenProfileTemplate
+                            )
+                        }
+                    }
+
+                    KsuIsValid {
+                        Card(
+                            modifier = Modifier
+                                .padding(top = 12.dp)
+                                .fillMaxWidth(),
+                        ) {
+                            val kpmTitle = stringResource(id = R.string.settings_kpm)
+                            ArrowPreference(
+                                title = kpmTitle,
+                                summary = stringResource(id = R.string.settings_kpm_summary),
+                                startAction = {
+                                    Icon(
+                                        Icons.Rounded.Extension,
+                                        modifier = Modifier.padding(end = 6.dp),
+                                        contentDescription = kpmTitle,
+                                        tint = colorScheme.onBackground
+                                    )
+                                },
+                                onClick = actions.onOpenKpm
                             )
                         }
                     }
