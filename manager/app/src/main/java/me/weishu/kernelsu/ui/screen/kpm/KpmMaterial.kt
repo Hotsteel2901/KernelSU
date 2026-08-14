@@ -50,6 +50,7 @@ fun KpmScreenMaterial(
     onRefresh: () -> Unit,
     onLoad: () -> Unit,
     onUnload: (String) -> Unit,
+    onPatchBoot: () -> Unit,
 ) {
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
     var selectedModule by remember { mutableStateOf<KpmModule?>(null) }
@@ -149,6 +150,17 @@ fun KpmScreenMaterial(
                                     WindowInsets.captionBar.asPaddingValues().calculateBottomPadding()
                         )
                     )
+                }
+            }
+
+            item {
+                androidx.compose.material3.OutlinedButton(
+                    onClick = onPatchBoot,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                ) {
+                    Text(stringResource(R.string.kpm_patch))
                 }
             }
         }

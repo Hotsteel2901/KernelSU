@@ -211,6 +211,16 @@
     <string name="kpm_unloaded">KPM unloaded</string>
     <string name="kpm_no_modules">No KPM loaded</string>
     <string name="kpm_empty_hint">Tap the refresh button to scan loaded modules</string>
+    <string name="kpm_patch">Patch boot image</string>
+    <string name="kpm_patch_summary">Inject kpimg into a boot image with kptools</string>
+    <string name="kpm_patch_select_boot">Select boot image</string>
+    <string name="kpm_patch_select_kpimg">Select kpimg</string>
+    <string name="kpm_patch_select_kptools">Select kptools</string>
+    <string name="kpm_patch_start">Patch and save to Downloads</string>
+    <string name="kpm_patch_running">Patching boot image...</string>
+    <string name="kpm_patch_success">Patched boot image saved to Downloads</string>
+    <string name="kpm_patch_failed">Failed to patch boot image</string>
+    <string name="kpm_patch_note">The patched boot image will be saved to the Downloads folder. Flash it manually (e.g. with Fastboot) afterwards.</string>
     <string name="feature_status_unsupported_summary">Kernel does not support this feature</string>
     <string name="feature_status_managed_summary">This feature is managed by a module</string>
     <string name="settings_mode_enable_by_default">Enable (Default)</string>

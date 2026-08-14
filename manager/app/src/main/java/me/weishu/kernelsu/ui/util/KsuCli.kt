@@ -541,3 +541,44 @@ fun unloadKpm(name: String): Boolean {
     Log.i(TAG, "kpm unload $name result: $result")
     return result
 }
+
+fun patchKpmBoot(
+    bootUri: Uri,
+    kpimgUri: Uri,
+    kptoolsUri: Uri,
+    onStdout: (String) -> Unit,
+    onStderr: (String) -> Unit,
+): FlashResult {
+    val resolver = ksuApp.contentResolver
+    val cacheDir = ksuApp.cacheDir
+
+    val bootFile = with(resolver.openInputStream(bootUri)) {
+        val file = File(cacheDir, "kpm-boot.img")
+        file.outputStream().use { output -> this?.copyTo(output) }
+        file
+    }
+    val kpimgFile = with(resolver.openInputStream(kpimgUri)) {
+        val file = File(cacheDir, "kpm-kpimg")
+        file.outputStream().use { output -> this?.copyTo(output) }
+        file
+    }
+    val kptoolsFile = with(resolver.openInputStream(kptoolsUri)) {
+        val file = File(cacheDir, "kpm-kptools")
+        file.outputStream().use { output -> this?.copyTo(output) }
+        file
+    }
+    kptoolsFile.setExecutable(true)
+
+    val downloadsDir =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+    val cmd = "boot-patch -b ${bootFile.absolutePath} --kpimg ${kpimgFile.absolutePath} " +
+            "--kptools ${kptoolsFile.absolutePath} -o $downloadsDir"
+    val result = flashWithIO("${getKsuDaemonPath()} $cmd", onStdout, onStderr)
+    Log.i(TAG, "patch kpm boot result: ${result.isSuccess}")
+
+    bootFile.delete()
+    kpimgFile.delete()
+    kptoolsFile.delete()
+
+    return FlashResult(result)
+}

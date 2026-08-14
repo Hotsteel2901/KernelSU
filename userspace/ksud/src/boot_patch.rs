@@ -369,7 +369,14 @@ fn parse_kmi_from_kernel(kernel: &Path) -> Result<String> {
     parse_kmi(&data)
 }
 
-fn find_kptools() -> Result<std::path::PathBuf> {
+fn find_kptools(explicit: Option<&Path>) -> Result<std::path::PathBuf> {
+    if let Some(path) = explicit {
+        let p = path.to_path_buf();
+        if p.is_file() {
+            return Ok(p);
+        }
+        bail!("kptools not found: {}", p.display());
+    }
     if let Some(path) = std::env::var_os("KPTOOLS") {
         let p = std::path::PathBuf::from(path);
         if p.is_file() {
@@ -560,6 +567,10 @@ pub struct BootPatchArgs {
     /// Inject KPatch-Next kpimg into the kernel image
     #[arg(long, default_value = None)]
     kpimg: Option<PathBuf>,
+
+    /// Path to the kptools binary used for kpimg injection
+    #[arg(long, default_value = None)]
+    kptools: Option<PathBuf>,
 }
 
 pub fn patch(args: BootPatchArgs) -> Result<()> {
@@ -590,6 +601,7 @@ pub fn patch(args: BootPatchArgs) -> Result<()> {
             arch,
             ramdisk,
             kpimg,
+            kptools,
         } = args;
 
         println!(include_str!("banner"));
@@ -849,11 +861,11 @@ pub fn patch(args: BootPatchArgs) -> Result<()> {
 
         if let Some(kpimg_path) = &kpimg {
             println!("- Injecting KPatch-Next kpimg");
-            let kptools = find_kptools()?;
+            let kptools = find_kptools(kptools.as_deref())?;
             let kernel_image = boot_image
                 .get_blocks()
                 .get_kernel()
-                .context("no kernel found in boot image")?;
+                .context("no kernel found in boot image, kpimg must be injected into a boot image that contains a kernel (use -b boot.img)")?;
             let mut kernel_buf = Vec::<u8>::new();
             kernel_image.dump(&mut kernel_buf, false)?;
             let tmp_dir = tempfile::tempdir().context("failed to create temp dir")?;

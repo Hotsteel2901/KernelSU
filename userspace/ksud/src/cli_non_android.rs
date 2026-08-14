@@ -14,6 +14,7 @@ struct Args {
 }
 
 #[derive(clap::Subcommand, Debug)]
+#[allow(clippy::large_enum_variant)]
 enum Commands {
     /// Patch boot or init_boot images to apply KernelSU
     BootPatch(BootPatchArgs),

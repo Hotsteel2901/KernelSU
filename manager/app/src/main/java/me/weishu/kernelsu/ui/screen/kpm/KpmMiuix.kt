@@ -60,6 +60,7 @@ fun KpmScreenMiuix(
     onRefresh: () -> Unit,
     onLoad: () -> Unit,
     onUnload: (String) -> Unit,
+    onPatchBoot: () -> Unit,
 ) {
     val scrollBehavior = MiuixScrollBehavior()
     val enableBlur = LocalEnableBlur.current
@@ -170,6 +171,17 @@ fun KpmScreenMiuix(
                             }
                         }
                         Spacer(Modifier.height(16.dp))
+                    }
+                }
+
+                item {
+                    top.yukonga.miuix.kmp.basic.Button(
+                        onClick = onPatchBoot,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 12.dp),
+                    ) {
+                        Text(stringResource(R.string.kpm_patch))
                     }
                 }
             }

@@ -16,6 +16,7 @@ import me.weishu.kernelsu.ksuApp
 import me.weishu.kernelsu.ui.LocalUiMode
 import me.weishu.kernelsu.ui.UiMode
 import me.weishu.kernelsu.ui.navigation3.LocalNavigator
+import me.weishu.kernelsu.ui.navigation3.Route
 import me.weishu.kernelsu.ui.util.getFileName
 import me.weishu.kernelsu.ui.viewmodel.KpmViewModel
 import java.io.File
@@ -56,6 +57,7 @@ fun KpmScreen() {
             )
         },
         onUnload = viewModel::unload,
+        onPatchBoot = { navigator.push(Route.KpmPatch) },
     )
 
     when (uiMode) {
@@ -65,6 +67,7 @@ fun KpmScreen() {
             onRefresh = actions.onRefresh,
             onLoad = actions.onLoad,
             onUnload = actions.onUnload,
+            onPatchBoot = actions.onPatchBoot,
         )
         UiMode.Material -> KpmScreenMaterial(
             state = uiState,
@@ -72,6 +75,7 @@ fun KpmScreen() {
             onRefresh = actions.onRefresh,
             onLoad = actions.onLoad,
             onUnload = actions.onUnload,
+            onPatchBoot = actions.onPatchBoot,
         )
     }
 }
@@ -81,6 +85,7 @@ data class KpmScreenActions(
     val onRefresh: () -> Unit,
     val onLoad: () -> Unit,
     val onUnload: (String) -> Unit,
+    val onPatchBoot: () -> Unit,
 )
 
 private fun copyKpmToCache(uri: Uri): File? {
