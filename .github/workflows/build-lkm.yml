@@ -2,6 +2,16 @@ name: Build LKM for KernelSU
 on:
   workflow_call:
     inputs:
+      expected_size:
+        description: 'Expected signature size (release builds)'
+        required: false
+        default: ''
+        type: string
+      expected_hash:
+        description: 'Expected signature hash (release builds)'
+        required: false
+        default: ''
+        type: string
       expected_size2:
         description: 'Second expected signature size (for PR builds)'
         required: false
@@ -29,5 +39,7 @@ jobs:
     with:
       kmi: ${{ matrix.kmi }}
       ddk_release: '20260313'
+      expected_size: ${{ inputs.expected_size || '' }}
+      expected_hash: ${{ inputs.expected_hash || '' }}
       expected_size2: ${{ inputs.expected_size2 || '' }}
       expected_hash2: ${{ inputs.expected_hash2 || '' }}
