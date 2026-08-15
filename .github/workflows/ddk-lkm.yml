@@ -52,7 +52,7 @@ jobs:
         EXPECTED_SIZE2: ${{ inputs.expected_size2 }}
         EXPECTED_HASH2: ${{ inputs.expected_hash2 }}
       run: |
-        git config --global --add safe.directory /__w/KernelSU/KernelSU
+        git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
         cd kernel
 
