@@ -84,6 +84,10 @@ MDIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 # Workaround bazel
 # https://github.com/tiann/KernelSU/pull/316#issuecomment-1479043219
 GIT := $(shell PATH="$$PATH":/usr/bin:/usr/local/bin which git)
+
+# Allow overriding the KernelSU version explicitly, e.g. for CI builds or
+# sources without git history: make KSU_VERSION=32589
+ifndef KSU_VERSION
 ifneq ($(GIT),)
 # Check if this is a git repository
 # Try to detect Git repo intelligently
@@ -112,7 +116,13 @@ ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 else
 # If there is no .git directory, use default version
 $(warning "KSU_GIT_VERSION not defined! It is better to make KernelSU a git repository!")
+$(warning "KernelSU version falls back to 16, which is rejected by current KernelSU managers (need >= 32513)!")
+$(warning "Build from a git clone of KernelSU with full history, or pass KSU_VERSION=<version> to override.")
 ccflags-y += -DKSU_VERSION=16
+endif
+else
+$(info -- KernelSU version overridden: $(KSU_VERSION))
+ccflags-y += -DKSU_VERSION=$(KSU_VERSION)
 endif
 
 KSU_NEW_DCACHE_FLUSH := $(shell grep -q __flush_dcache_area $(srctree)/arch/arm64/include/asm/cacheflush.h ; echo $$?)
